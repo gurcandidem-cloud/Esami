@@ -636,17 +636,16 @@
         window.scrollTo(0,0);
     }
 
-    function hardReset() {
-        // --- ŞİFRELİ SIFIRLAMA ---
-        let pass = prompt("Sistemi sıfırlamak için Öğretmen Şifresini (START) girin:");
+        function hardReset() {
+        let pass = prompt("Sistemi sıfırlamak için Yönetici Şifresini girin:");
         
-        if(pass === TEACHER_PASSWORD) {
-            if(confirm("Tüm veriler silinecek ve giriş ekranına dönülecek. Onaylıyor musunuz?")) {
+        if(pass === "cavolo") {
+            if(confirm("Tüm veriler silinecek! Onaylıyor musun?")) {
                 localStorage.clear();
                 location.reload();
             }
         } else {
-            alert("⛔ Yetkisiz işlem! Şifre yanlış.");
+            alert("⛔ Şifre yanlış!");
         }
     }
 
