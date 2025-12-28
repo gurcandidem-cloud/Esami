@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
+    <title>Esame Livello II - 2025/2026</title>
+    <script src="studenti.js"></script>
+    
+    <style>
+        /* GENEL AYARLAR */
+        body { font-family: 'Segoe UI', Helvetica, Arial, sans-serif; background-color: #f0f2f5; margin: 0; padding: 0; user-select: none; -webkit-user-select: none; touch-action: manipulation; }
+        
+        /* DÜZELTME: .container içindeki 'display: none' silindi. Artık JS ile yönetiliyor. */
+        .container { 
+            max-width: 800px; 
+            margin: 10px auto; 
+            background: white; 
+            padding: 20px; 
+            border-radius: 8px; 
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1); 
+            padding-bottom: 100px; 
+        }
+
+        /* DÜZELTME: Sınav arayüzü başlangıçta gizli olsun */
+        #examInterface {
+            display: none;
+        }
+        
+        /* GİRİŞ EKRANI */
+        #loginScreen { max-width: 90%; margin: 20px auto; background: white; padding: 25px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); text-align: center; }
+        .honor-code { background: #fff3cd; padding: 15px; border: 1px solid #ffeeba; border-radius: 5px; margin: 20px 0; font-size: 0.85em; text-align: left; line-height: 1.4; }
+        
+        /* ŞİFRE KUTUSU STİLİ */
+        .password-box {
+            background-color: #e3f2fd;
+            border: 2px solid #2196f3;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: left;
+        }
+
+        /* TEKNİK UYARI KUTUSU */
+        .tech-warning {
+            background-color: #e8f4f8;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+            padding: 15px;
+            border-radius: 5px;
+            font-size: 0.85em;
+            text-align: left;
+            margin-bottom: 20px;
+        }
+        .tech-warning ul { margin: 5px 0 0 20px; padding: 0; }
+        .tech-warning li { margin-bottom: 5px; }
+
+        /* HEADER & TIMER */
+        .sticky-header { 
+            position: sticky; top: 0; background: #2c3e50; color: white; padding: 10px 15px; z-index: 1000; 
+            display: flex; justify-content: space-between; align-items: center; font-size: 0.9em; box-shadow: 0 2px 5px rgba(0,0,0,0.2); 
+        }
+        .timer { font-size: 1.3em; font-weight: bold; color: #ffeb3b; font-family: monospace; }
+        .save-status { font-size: 0.7em; color: #aaa; margin-left: 10px; }
+
+        /* SORULAR VE METİNLER */
+        h1 { font-size: 1.5em; color: #333; margin-bottom: 10px; }
+        h2 { font-size: 1.2em; color: #444; border-bottom: 2px solid #eee; padding-bottom: 10px; margin-top: 25px; }
+        
+        .question { margin-bottom: 15px; padding: 12px; border-radius: 6px; border: 1px solid #eee; background: #fff; }
+        .question label { display: block; padding: 8px 0; cursor: pointer; -webkit-tap-highlight-color: transparent; }
+        .question input[type="radio"] { transform: scale(1.2); margin-right: 8px; }
+
+        /* OKUMA METNİ VE SÖZLÜK */
+        .reading-text { background: #e3f2fd; padding: 15px; border-left: 4px solid #2196f3; font-size: 1.0em; line-height: 1.8; margin-bottom: 10px; border-radius: 4px; }
+        
+        .vocab {
+            color: #d63384; font-weight: bold; text-decoration: underline dotted; cursor: pointer; position: relative;
+        }
+        .vocab:hover { background-color: #fce4ec; }
+
+        #vocab-toast {
+            visibility: hidden; min-width: 250px; background-color: #333; color: #fff; text-align: center; border-radius: 5px; padding: 16px; position: fixed; z-index: 3000; left: 50%; bottom: 30px; transform: translateX(-50%); font-size: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.3); opacity: 0; transition: opacity 0.3s, bottom 0.3s;
+        }
+        #vocab-toast.show { visibility: visible; opacity: 1; bottom: 50px; }
+        
+        /* YAZMA ASİSTANI */
+        details.helper-box { background-color: #f8f9fa; border: 1px solid #dee2e6; border-radius: 5px; padding: 10px; margin-bottom: 15px; font-size: 0.9em; }
+        details.helper-box summary { font-weight: bold; color: #007bff; cursor: pointer; outline: none; margin-bottom: 5px; }
+        .phrase-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+        .chip { background: #e9ecef; border: 1px solid #ced4da; padding: 5px 10px; border-radius: 15px; font-size: 0.85em; cursor: pointer; transition: 0.2s; color: #495057; }
+        .chip:hover { background: #007bff; color: white; border-color: #007bff; }
+        .chip:active { transform: scale(0.95); }
+
+        /* INPUTLAR */
+        input[type="text"], input[type="password"], textarea { width: 100%; padding: 12px; margin-top: 8px; border: 1px solid #ccc; border-radius: 6px; font-size: 16px; box-sizing: border-box; font-family: inherit; }
+        
+        /* GRAMER BÖLÜMÜ İÇİN ÖZEL INPUT STİLİ (Paragraf İçi) */
+        .inline-input {
+            width: 120px !important;
+            display: inline-block !important;
+            margin: 0 5px;
+            padding: 5px !important;
+            height: 30px;
+            border-bottom: 2px solid #007bff !important;
+            border-top: none !important;
+            border-left: none !important;
+            border-right: none !important;
+            border-radius: 0 !important;
+            background: #f8f9fa;
+            text-align: center;
+            color: #333;
+            font-weight: bold;
+        }
+
+        textarea { resize: vertical; min-height: 150px; line-height: 1.5; }
+
+        /* BUTONLAR */
+        .btn { display: block; width: 100%; padding: 15px; border: none; font-size: 18px; font-weight: bold; cursor: pointer; border-radius: 8px; margin-top: 25px; transition: 0.2s; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .btn-start { background: #28a745; color: white; }
+        .btn-submit { background: #007bff; color: white; margin-bottom: 30px; }
+        .btn:disabled { background: #bdc3c7; opacity: 0.7; }
+        .btn-restore { background: #ffc107; color: #333; display: none; margin-bottom: 10px; }
+        .copy-btn { background: #6f42c1; color: white; margin-top: 10px; }
+
+        .cheat-alert { display: none; background: #e74c3c; color: white; text-align: center; padding: 12px; font-weight: bold; position: fixed; top: 0; left: 0; width: 100%; z-index: 2000; font-size: 0.9em; }
+
+        audio { width: 100%; margin-top: 10px; height: 40px; }
+    </style>
+</head>
+<body>
+
+<div id="vocab-toast">Anlamı burada görünecek</div>
+
+<div id="cheatBanner" class="cheat-alert">
+    ⚠️ UYARI: EKRANDAN AYRILDINIZ! <br>
+    <span style="font-weight:normal; font-size:0.8em;">Bu durum kayıt altına alındı.</span>
+</div>
+
+<div id="loginScreen">
+    <h1>🇮🇹 Esame Livello II</h1>
+    <p style="color:#666;">2025/2026 Online Sınav Girişi</p>
+    
+    <div class="tech-warning">
+        <strong>⚠️ ÖNEMLİ TEKNİK KURALLAR:</strong>
+        <ul>
+            <li>Lütfen <strong>"Gizli Sekme" (Incognito)</strong> kullanmayınız! (Sistem kayıt yapamaz).</li>
+            <li>Elektrik kesilirse veya sayfa kapanırsa panik yapmayın. Sınava <strong>AYNI CİHAZ ve AYNI TARAYICI</strong> ile tekrar girerseniz, cevaplarınız ve süreniz kaldığı yerden devam edecektir.</li>
+        </ul>
+    </div>
+
+    <button id="restoreBtn" class="btn btn-restore" onclick="restoreSession()">
+        🔄 Önceki oturumunuz bulundu! <br><span style="font-size:0.8em">Kaldığınız yerden devam etmek için tıklayın.</span>
+    </button>
+
+    <div id="newSessionForm">
+        
+        <div class="password-box">
+            <label style="color:#0d47a1; font-weight:bold;">🔒 Sınav Giriş Kodu:</label>
+            <input type="password" id="examPassword" placeholder="Öğretmeninizden aldığınız şifre..." oninput="checkStartButton()">
+        </div>
+
+        <div style="text-align: left; margin-top: 20px;">
+            <label><strong>Adınız Soyadınız:</strong></label>
+            
+            <input type="text" id="studentName" list="studentListOptions" placeholder="Listeden seçin veya isminizi yazın..." oninput="checkStartButton()">
+            
+            <datalist id="studentListOptions"></datalist>
+        </div>
+
+        <div class="honor-code">
+            <label style="display: flex; align-items: flex-start; gap: 10px;">
+                <input type="checkbox" id="honorCheck" onchange="checkStartButton()">
+                <span>
+                    <strong>⚠️ SINAV UYARISI:</strong><br>
+                    Bilgisayarda <strong>sekme değiştirmek</strong>; <br>
+                    Telefon/Tablette ise <strong>bildirim veya arama gelmesi</strong> "Ekran İhlali" sayılır.<br>
+                    Lütfen cihazınızda gerekli önlemleri alınız.<br>
+                    Kopya çekmeyeceğimi taahhüt ediyorum.
+                </span>
+            </label>
+        </div>
+
+        <button id="startBtn" class="btn btn-start" onclick="attemptLogin()" disabled>GİRİŞ YAP VE BAŞLAT</button>
+    </div>
+</div>
+
+<div id="examInterface">
+    
+    <div class="sticky-header">
+        <div style="display:flex; flex-direction:column;">
+            <div class="student-name-display" id="displayName">...</div>
+            <div id="saveStatus" class="save-status">Kaydedildi</div>
+        </div>
+        <div style="display:flex; align-items:center; gap:5px;">
+            <span>⏱️</span>
+            <div id="timerDisplay" class="timer">50:00</div>
+        </div>
+    </div>
+
+    <div class="container">
+        
+        <div class="section">
+            <h2>🎧 1. ASCOLTO (10 Punti)</h2>
+            <div style="background: #f1f3f5; padding: 15px; border-radius: 8px; text-align: center;">
+                <p style="margin:0 0 5px 0; font-weight:bold;">Ses Dosyası:</p>
+                <audio id="examAudio" controls controlsList="nodownload" onplay="checkAudioLimit()" onended="countAudioPlay()">
+
+                    <source src="sinav_sesi.mp3" type="audio/mpeg">
+                    Tarayıcınız sesi desteklemiyor.
+                </audio>
+            </div>
+            
+            <div class="question">
+                <p><strong>1. La donna prende:</strong></p>
+                <label><input type="radio" name="q1" value="a" onchange="autoSave()"> a. un panino</label>
+                <label><input type="radio" name="q1" value="b" onchange="autoSave()"> b. una pizza</label>
+                <label><input type="radio" name="q1" value="c" onchange="autoSave()"> c. un cornetto al cioccolato</label>
+            </div>
+            <div class="question">
+                <p><strong>2. L'uomo prende:</strong></p>
+                <label><input type="radio" name="q2" value="a" onchange="autoSave()"> a. una torta al cioccolato</label>
+                <label><input type="radio" name="q2" value="b" onchange="autoSave()"> b. un cornetto alla crema</label>
+                <label><input type="radio" name="q2" value="c" onchange="autoSave()"> c. un cornetto al cioccolato</label>
+            </div>
+            <div class="question">
+                <p><strong>3. La donna ordina:</strong></p>
+                <label><input type="radio" name="q3" value="a" onchange="autoSave()"> a. una bottiglia di acqua naturale</label>
+                <label><input type="radio" name="q3" value="b" onchange="autoSave()"> b. un bicchiere di acqua frizzante</label>
+                <label><input type="radio" name="q3" value="c" onchange="autoSave()"> c. una bottiglia di vino</label>
+            </div>
+            <div class="question">
+                <p><strong>4. La ragazza prende un caffè:</strong></p>
+                <label><input type="radio" name="q4" value="a" onchange="autoSave()"> a. vuole un caffè</label>
+                <label><input type="radio" name="q4" value="b" onchange="autoSave()"> b. non beve il succo di frutta</label>
+                <label><input type="radio" name="q4" value="c" onchange="autoSave()"> c. ha già bevuto il caffè a casa</label>
+            </div>
+            <div class="question">
+                <p><strong>5. Il ragazzo prende:</strong></p>
+                <label><input type="radio" name="q5" value="a" onchange="autoSave()"> a. un caffè</label>
+                <label><input type="radio" name="q5" value="b" onchange="autoSave()"> b. un succo di frutta</label>
+                <label><input type="radio" name="q5" value="c" onchange="autoSave()"> c. una spremuta d'arancia</label>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📖 2. LETTURA (10 Punti)</h2>
+            <p style="font-size:0.8em; color:gray; text-align:center; margin-bottom:5px;">ℹ️ İpucu: Altı çizili kelimelerin üzerine tıklayarak anlamını görebilirsiniz.</p>
+            
+            <div class="reading-text">
+                <strong>CAFFÉ BIFFI: LA STORIA DEL PRIMO BAR DI MILANO</strong><br>
+                Il Caffè Biffi è un bellissimo locale nel centro storico di Milano. Il bar è dentro alla Galleria Vittorio Emanuele II, vicino al famoso Duomo. <br><br>
+                L'<span class="vocab" onclick="showDef('Girişimci / İş adamı')">imprenditore</span> milanese Paolo Biffi <span class="vocab" onclick="showDef('ha aperto = Açtı (Aprire)')">ha aperto</span> questo bar nel 1867 ed <span class="vocab" onclick="showDef('ha avuto = Sahip oldu (Avere)')">ha avuto</span> un grande successo.<br><br>
+                Negli anni, molti clienti importanti <span class="vocab" onclick="showDef('hanno visitato = Ziyaret ettiler (Visitare)')">hanno visitato</span> il bar, ad esempio il <span class="vocab" onclick="showDef('Celebre = Ünlü / Meşhur')">celebre</span> <span class="vocab" onclick="showDef('Compositore = Besteci')">compositore</span> Giuseppe Verdi.<br><br>
+                All’inizio, il Caffè Biffi <span class="vocab" onclick="showDef('è diventato = Oldu / Dönüştü (Diventare)')">è diventato</span> famoso soprattutto grazie alla sua specialità, il panettone, un tradizionale dolce di Natale fatto con <span class="vocab" onclick="showDef('Lievito = Maya')">lievito</span>, burro, uova, canditi e frutta secca.<br><br>
+                Ancora oggi le persone vanno spesso al Caffè Biffi per un caffè o un cappuccino, specialmente il sabato e la domenica. Ma non solo: il bar è anche un ristorante e offre un ricco menù di cibi e bevande della tradizione italiana.<br><br>
+                Tra questi, ci sono antipasti come la caprese con mozzarella di bufala, primi piatti come il risotto alla milanese, gnocchi di patate, spaghetti alle <span class="vocab" onclick="showDef('Vongole = Midye / İstiridye')">vongole</span> e secondi piatti di carne o di pesce.<br><br>
+                Dopo il pranzo, i clienti ordinano spesso una specialità della casa: la “torta Garibaldi”, un dessert preparato con crema di caffè e marmellata di ciliegie che <span class="vocab" onclick="showDef('prende il nome = İsmini alır (Prendere)')">prende il nome</span> dal famoso generale italiano Giuseppe Garibaldi!
+            </div>
+
+            <div class="question">
+                <p><strong>1. Il Caffè Biffi è:</strong></p>
+                <label><input type="radio" name="q6" value="a" onchange="autoSave()"> a. nella periferia di Milano</label>
+                <label><input type="radio" name="q6" value="b" onchange="autoSave()"> b. dentro alla Galleria Vittoria Emanuele II</label>
+                <label><input type="radio" name="q6" value="c" onchange="autoSave()"> c. dentro al Duomo</label>
+            </div>
+            <div class="question">
+                <p><strong>2. La persona che ha aperto il Bar si chiama:</strong></p>
+                <label><input type="radio" name="q7" value="a" onchange="autoSave()"> a. Vittorio Emanuele</label>
+                <label><input type="radio" name="q7" value="b" onchange="autoSave()"> b. Paolo Biffi</label>
+                <label><input type="radio" name="q7" value="c" onchange="autoSave()"> c. Giuseppe Verdi</label>
+            </div>
+            <div class="question">
+                <p><strong>3. All'inizio il bar è diventato famoso:</strong></p>
+                <label><input type="radio" name="q8" value="a" onchange="autoSave()"> a. per il panettone</label>
+                <label><input type="radio" name="q8" value="b" onchange="autoSave()"> b. per il cappuccino</label>
+                <label><input type="radio" name="q8" value="c" onchange="autoSave()"> c. per il compositore Giuseppe Verdi</label>
+            </div>
+            <div class="question">
+                <p><strong>4. I clienti vanno spesso al Caffè Biffi:</strong></p>
+                <label><input type="radio" name="q9" value="a" onchange="autoSave()"> a. solo per bere il caffè</label>
+                <label><input type="radio" name="q9" value="b" onchange="autoSave()"> b. solo il sabato</label>
+                <label><input type="radio" name="q9" value="c" onchange="autoSave()"> c. nel fine settimana</label>
+            </div>
+            <div class="question">
+                <p><strong>5. La torta Garibaldi:</strong></p>
+                <label><input type="radio" name="q10" value="a" onchange="autoSave()"> a. è un antipasto</label>
+                <label><input type="radio" name="q10" value="b" onchange="autoSave()"> b. non piace molto ai clienti</label>
+                <label><input type="radio" name="q10" value="c"> c. ha il nome di un famoso generale italiano</label>
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>✍️ 3. GRAMMATICA</h2>
+            <p style="font-size:0.9em; color:#666;">Completa con il passato prossimo:</p>
+            
+            <div class="question" style="line-height: 2.2; font-size: 1.1em;">
+                L’estate scorsa io (1) (andare) <input type="text" id="g1" placeholder="..." oninput="autoSave()" class="inline-input"> in vacanza in un posto esotico. Così ho deciso di andare alle Maldive. 
+                La mia amica Giulia (2) (partire) <input type="text" id="g2" placeholder="..." oninput="autoSave()" class="inline-input"> con me. Abbiamo dormito in un bungalow e abbiamo mangiato molti cibi diversi. 
+                Noi (3) (nuotare) <input type="text" id="g3" placeholder="..." oninput="autoSave()" class="inline-input"> e (4) (prendere) <input type="text" id="g4" placeholder="..." oninput="autoSave()" class="inline-input"> il sole. 
+                Noi (5) (passare) <input type="text" id="g5" placeholder="..." oninput="autoSave()" class="inline-input"> una vacanza bellissima.
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>📝 4. PRODUZIONE SCRITTA</h2>
+            <p>Racconta come hai passato lo scorso finesettimana (25 - 40 parole).</p>
+            
+            <div style="background:#eaf6ff; border:1px solid #b6e0fe; padding:10px; border-radius:8px; margin-bottom:10px;">
+                <p style="margin:0 0 5px 0; font-weight:bold; font-size:0.9em; color:#0056b3;">💡 Yardımcı Kalıplar (Tıkla ve Ekle)</p>
+                <p style="font-size:0.85em; color:#d63384; font-weight:bold; margin-bottom:10px;">
+                    ⚠️ ÖNEMLİ: Şablon ekledikten sonra, noktalı yerleri (...) silip kendi cümlelerinizle tamamlamayı unutmayın!
+                </p>
+                
+                <details class="helper-box">
+                    <summary>1. Giriş (Inizio)</summary>
+                    <div class="phrase-chips">
+                        <span class="chip" onclick="addPhrase('Lo scorso fine settimana...')">Lo scorso fine settimana...</span>
+                        <span class="chip" onclick="addPhrase('Sabato mattina sono andato a...')">Sabato mattina sono andato a...</span>
+                        <span class="chip" onclick="addPhrase('Domenica ho deciso di...')">Domenica ho deciso di...</span>
+                        <span class="chip" onclick="addPhrase('Il tempo era bellissimo, quindi...')">Il tempo era bellissimo, quindi...</span>
+                    </div>
+                </details>
+
+                <details class="helper-box">
+                    <summary>2. Gelişme (Sviluppo)</summary>
+                    <div class="phrase-chips">
+                        <span class="chip" onclick="addPhrase('Poi abbiamo mangiato...')">Poi abbiamo mangiato...</span>
+                        <span class="chip" onclick="addPhrase('Dopo pranzo...')">Dopo pranzo...</span>
+                        <span class="chip" onclick="addPhrase('Verso sera...')">Verso sera...</span>
+                        <span class="chip" onclick="addPhrase('Ho incontrato i miei amici e...')">Ho incontrato i miei amici e...</span>
+                    </div>
+                </details>
+
+                <details class="helper-box">
+                    <summary>3. Sonuç (Conclusione)</summary>
+                    <div class="phrase-chips">
+                        <span class="chip" onclick="addPhrase('Alla fine sono tornato a casa...')">Alla fine sono tornato a casa...</span>
+                        <span class="chip" onclick="addPhrase('È stata una giornata faticosa ma...')">È stata una giornata faticosa ma...</span>
+                        <span class="chip" onclick="addPhrase('Mi sono divertito molto perché...')">Mi sono divertito molto perché...</span>
+                    </div>
+                </details>
+            </div>
+
+            <textarea id="writingAnswer" rows="6" placeholder="Buraya yazın..." oninput="autoSave()"></textarea>
+        </div>
+
+        <button class="btn btn-submit" onclick="finishExam(false)">SINAVI BİTİR VE KAYDET</button>
+    </div>
+</div>
+
+<div id="resultScreen" style="display:none; text-align:center;">
+    <h2 style="color:#28a745;">✅ Sınav Tamamlandı</h2>
+    <p>Aşağıdaki metni kopyalayıp <strong>WhatsApp</strong> üzerinden öğretmeninize gönderin.</p>
+    
+    <textarea id="finalReport" class="result-box" readonly></textarea>
+    
+    <button class="btn copy-btn" onclick="copyResult()">📋 TEK TIKLA KOPYALA</button>
+    <p id="copyStatus" style="display:none; color:green; font-weight:bold; margin-top:5px;">Kopyalandı! WhatsApp'a yapıştırabilirsiniz.</p>
+</div>
+
+<script>
+    // --- ÖĞRETMEN AYARLARI ---
+    const TEACHER_PASSWORD = "START"; 
+    const EXAM_DURATION_MINUTES = 50; 
+    const SAVE_KEY = "esame_italiano_2025_final_v10"; 
+    
+    // --- PUANLAMA AYARLARI ---
+    const POINTS_TEST = 2;    // Test soruları 2 Puan
+    const POINTS_GRAMMAR = 1; // Gramer soruları 1 Puan
+
+    // --- ŞİFRELİ GİZLİ İSİMLER (MASTER KEYS) ---
+    const SECRET_HASHES = [
+        "Um9tYV8xODYx",       // Roma_1861
+        "RGFudGVfMTI2NQ==",   // Dante_1265
+        "VmVyZGlfTmFidWNjbw==" // Verdi_Nabucco
+    ];
+
+    // --- CEVAP ANAHTARI ---
+    const ANSWER_KEY = {
+        q1: "a", q2: "c", q3: "a", q4: "a", q5: "a", // Ascolto
+        q6: "b", q7: "b", q8: "a", q9: "c", q10: "c", // Lettura
+        g1: ["sono andato", "sono andata"], g2: ["è partita"], g3: ["abbiamo nuotato"], g4: ["abbiamo preso"], g5: ["abbiamo passato"] // Gramer
+    };
+
+    let timerInterval, violationCount = 0, examLogs = [], audioLimit = 2;
+
+        window.onload = function() {
+        populateStudentList();
+        
+        let savedData = JSON.parse(localStorage.getItem(SAVE_KEY)) || {};
+        // Master isimlerden biriyle mi girilmiş kontrol et
+        let isMaster = (savedData.name) ? SECRET_HASHES.includes(btoa(savedData.name)) : false;
+
+        // Eğer sınav bittiyse VE kullanıcı Master değilse, sonuç ekranına kilitle
+        if(localStorage.getItem(SAVE_KEY + "_status") === "completed" && !isMaster) { 
+            showResultScreen(); 
+            return; 
+        }
+
+        if(localStorage.getItem(SAVE_KEY + "_startTime")) { 
+            document.getElementById('restoreBtn').style.display = 'block'; 
+            document.getElementById('newSessionForm').style.display = 'none'; 
+        }
+    }
+    
+
+    // --- 1. LİSTEYİ DOLDURMA ---
+    function populateStudentList() {
+        const dataList = document.getElementById("studentListOptions");
+        // studenti.js dosyasından listeyi çeker
+        if (typeof OGRENCI_LISTESI !== 'undefined') {
+            OGRENCI_LISTESI.forEach(name => {
+                let opt = document.createElement("option");
+                opt.value = name;
+                dataList.appendChild(opt);
+            });
+        }
+    }
+
+    // --- 2. GİRİŞ KONTROLÜ ---
+    function attemptLogin() {
+        const inputName = document.getElementById('studentName').value.trim();
+        const inputPass = document.getElementById('examPassword').value.trim();
+
+        // ADIM 0: ÖĞRENCİ DAHA ÖNCE BİTİRMİŞ Mİ?
+        
+            // Master kontrolü (İsimleri tekrar yazmana gerek yok, listeden bakar)
+    let isMaster = SECRET_HASHES.includes(btoa(inputName));
+
+    if (localStorage.getItem("LOCK_" + inputName) === "completed") {
+        if (isMaster) {
+            // Eğer master ise eski kilidi temizle ki girebilsin
+            localStorage.removeItem("LOCK_" + inputName);
+        } else {
+            // Normal öğrenci ise girişi engelle
+            alert("⛔ BU ÖĞRENCİ (" + inputName + ") SINAVI ZATEN TAMAMLADI!");
+            return; 
+        }
+    }
+    
+
+        // ADIM 1: ŞİFRE KONTROLÜ
+        if (inputPass !== TEACHER_PASSWORD) {
+            alert("❌ HATALI SINAV ŞİFRESİ!");
+            return; 
+        }
+
+        // ADIM 2: GİZLİ İSİM Mİ?
+        if (SECRET_HASHES.includes(btoa(inputName))) {
+            alert("🇮🇹 Benvenuto/a! Yönetici Girişi Onaylandı: " + inputName);
+            startExam(false);
+            return;
+        }
+
+        // ADIM 3: LİSTEDEKİ ÖĞRENCİ Mİ?
+        if (typeof OGRENCI_LISTESI !== 'undefined' && OGRENCI_LISTESI.includes(inputName)) {
+            startExam(false); 
+        } else {
+             alert("⛔ BU İSİMLE GİRİŞ YETKİNİZ YOK!\nLütfen listeden kendi isminizi seçiniz.\n(Dosyadaki isimle birebir aynı olmalı)");
+        }
+    }
+
+    // --- 3. BUTON KONTROLÜ (Bu kod eksik olduğu için önceki hatayı alıyordun) ---
+    function checkStartButton() {
+        const name = document.getElementById('studentName').value;
+        const pass = document.getElementById('examPassword').value.trim();
+        const check = document.getElementById('honorCheck').checked;
+        
+        const startBtn = document.getElementById('startBtn');
+        
+        if (name.length > 0 && check && pass.length > 0) {
+            startBtn.disabled = false;
+            startBtn.style.opacity = "1";
+        } else {
+            startBtn.disabled = true;
+            startBtn.style.opacity = "0.5";
+        }
+    }
+
+    function startExam(isRestored = false) {
+ examLogs.push("[" + new Date().toLocaleTimeString() + "] Sınav Başladı.");
+    
+        let sName = document.getElementById('studentName').value;
+        if(isRestored) sName = JSON.parse(localStorage.getItem(SAVE_KEY)).name;
+        if (!localStorage.getItem(SAVE_KEY + "_startTime")) localStorage.setItem(SAVE_KEY + "_startTime", new Date().getTime());
+
+        document.getElementById('displayName').innerText = sName;
+        document.getElementById('loginScreen').style.display = 'none';
+        
+        // ANA DÜZELTME: Sınav arayüzünü açarken container'ın da görünür olduğundan emin oluyoruz.
+        document.getElementById('examInterface').style.display = 'block'; 
+        document.querySelector('.container').style.display = 'block'; 
+        
+        if(isRestored) restoreInputs(); 
+        timerInterval = setInterval(updateAbsoluteTimer, 1000);
+        updateAbsoluteTimer();
+        window.scrollTo(0,0);
+        checkAudioLimit();
+    }
+
+    function updateAbsoluteTimer() {
+        let elapsed = Math.floor((new Date().getTime() - parseInt(localStorage.getItem(SAVE_KEY + "_startTime"))) / 1000);
+        let remain = (EXAM_DURATION_MINUTES * 60) - elapsed;
+        if (remain <= 0) { clearInterval(timerInterval); document.getElementById('timerDisplay').innerText = "00:00"; finishExam(true); return; }
+        let m = Math.floor(remain / 60), s = remain % 60;
+        document.getElementById('timerDisplay').innerText = (m<10?'0':'')+m + ":" + (s<10?'0':'')+s;
+        if (remain <= 300) document.getElementById('timerDisplay').style.color = "red";
+        if(remain % 10 === 0) autoSave();
+    }
+
+    function autoSave() {
+        let answers = {}, grammar = {};
+        for(let i=1; i<=10; i++) { let r = document.querySelector(`input[name="q${i}"]:checked`); if(r) answers["q"+i] = r.value; }
+        for(let i=1; i<=5; i++) { grammar["g"+i] = document.getElementById('g'+i).value; }
+        let data = { name: document.getElementById('studentName').value, writing: document.getElementById('writingAnswer').value, answers: answers, grammar: grammar, logs: examLogs, violations: violationCount };
+        localStorage.setItem(SAVE_KEY, JSON.stringify(data));
+        let st = document.getElementById('saveStatus'); if(st) { st.innerText = "Kaydedildi"; setTimeout(() => { st.innerText = ""; }, 1000); }
+    }
+
+    function restoreInputs() {
+        let data = JSON.parse(localStorage.getItem(SAVE_KEY));
+        if(!data) return;
+        violationCount = data.violations || 0; examLogs = data.logs || [];
+        for(let i=1; i<=10; i++) { if(data.answers["q"+i]) document.querySelector(`input[name="q${i}"][value="${data.answers["q"+i]}"]`).checked = true; }
+        for(let i=1; i<=5; i++) { if(data.grammar["g"+i]) document.getElementById('g'+i).value = data.grammar["g"+i]; }
+        document.getElementById('writingAnswer').value = data.writing;
+    }
+
+    function checkAudioLimit() {
+        let played = parseInt(localStorage.getItem(SAVE_KEY + "_audioPlay")) || 0;
+        let p = document.getElementById("examAudio");
+        if (played >= audioLimit) { if(!p.paused) { p.pause(); p.currentTime = 0; alert("⚠️ Dinleme hakkı doldu!"); } p.style.opacity = "0.5"; p.style.pointerEvents = "none"; }
+    }
+    function countAudioPlay() {
+        let played = parseInt(localStorage.getItem(SAVE_KEY + "_audioPlay")) || 0;
+        played++; localStorage.setItem(SAVE_KEY + "_audioPlay", played);
+        if(played >= audioLimit) { alert("Dinleme hakkı bitti."); document.getElementById("examAudio").style.opacity = "0.5"; document.getElementById("examAudio").style.pointerEvents = "none"; }
+    }
+
+    let ayrilmaZamani;
+document.addEventListener("visibilitychange", function() {
+    if (document.hidden) {
+        ayrilmaZamani = new Date().getTime();
+    } else {
+        if (ayrilmaZamani && document.getElementById('examInterface').style.display !== 'none') {
+            let farkSaniye = Math.floor((new Date().getTime() - ayrilmaZamani) / 1000);
+            violationCount++;
+            let simdi = new Date().toLocaleTimeString();
+            examLogs.push("[" + simdi + "] ⚠️ İHLAL: Ekran Terk Edildi. " + farkSaniye + " saniye dışarıda kaldı.");
+            document.getElementById('cheatBanner').style.display = 'block';
+            setTimeout(() => { document.getElementById('cheatBanner').style.display = 'none'; }, 4000);
+            ayrilmaZamani = null;
+        }
+    }
+});
+
+
+    // --- SONUÇ VE PUANLAMA ---
+    function finishExam(forced) {
+        if(!forced && !confirm("Sınavı bitirmek istediğinize emin misiniz? Geri dönüşü yoktur.")) return;
+        
+        clearInterval(timerInterval); 
+        autoSave();
+        
+        // 1. Öğrencinin ismini al
+        let sName = document.getElementById('studentName').value;
+        
+        // 2. Bu isme "TAMAMLANDI" mührü vur
+        localStorage.setItem("LOCK_" + sName, "completed");
+        
+        // 3. Genel durumu güncelle
+        localStorage.setItem(SAVE_KEY + "_status", "completed");
+        
+        showResultScreen();
+    }
+
+
+    function showResultScreen() {
+        document.getElementById('loginScreen').style.display = 'none';
+        document.getElementById('examInterface').style.display = 'none';
+        document.getElementById('resultScreen').style.display = 'block';
+
+        let data = JSON.parse(localStorage.getItem(SAVE_KEY)) || {};
+        let totalScore = 0;
+        let maxAutoScore = 25; 
+
+        let report = "--- İTALYANCA SINAV SONUCU ---\n";
+        report += "Öğrenci: " + (data.name || "-") + "\n";
+        report += "Tarih: " + new Date().toLocaleString() + "\n";
+        let details = "";
+        
+        // Test Bölümü
+        details += "\n[TEST BÖLÜMÜ (20 Puan)]\n";
+        if(data.answers) {
+            for(let i=1; i<=10; i++) {
+                let ans = data.answers["q"+i];
+                let correct = ANSWER_KEY["q"+i];
+                let isCorrect = (ans === correct);
+                if(isCorrect) totalScore += POINTS_TEST;
+                details += i + ". " + (ans ? ans.toUpperCase() : "-") + " " + (isCorrect ? "✅" : "❌") + "\n";
+            }
+        }
+
+        // Gramer Bölümü
+        details += "\n[GRAMER BÖLÜMÜ (5 Puan)]\n";
+        if(data.grammar) {
+            for(let i=1; i<=5; i++) {
+                let ans = (data.grammar["g"+i] || "").trim();
+                let correctOptions = ANSWER_KEY["g"+i]; 
+                let isCorrect = correctOptions.some(opt => opt.toLowerCase() === ans.toLowerCase());
+                if(isCorrect) totalScore += POINTS_GRAMMAR;
+                details += "G" + i + ": " + ans + " " + (isCorrect ? "✅" : "❌") + "\n";
+            }
+        }
+
+                // 10 Harfli Doğrulama Anahtarı
+        let verifyKey = "";
+        let map = { "a": "X", "b": "Y", "c": "Z", "-": "0" };
+        for (let i = 1; i <= 10; i++) {
+            let ans = (data.answers && data.answers["q" + i]) ? data.answers["q" + i] : "-";
+            verifyKey += map[ans.toLowerCase()] || "0";
+        }
+
+        report += "OTOMATİK PUAN: " + totalScore + " / " + maxAutoScore + "\n";
+        report += "İHLAL SAYISI: " + (data.violations || 0) + "\n";
+        report += "DOĞRULAMA ANAHTARI: [" + verifyKey + "]\n"; 
+        report += "\n[DETAYLAR]\n" + details; 
+
+        report += "\n[KOMPOZİSYON (5 Puan)]\n" + (data.writing || "-") + "\n";
+        
+        report += "\n[SINAV LOG KAYITLARI]\n";
+if(data.logs) {
+    data.logs.forEach(log => { report += log + "\n"; });
+}
+ document.getElementById('finalReport').value = report;
+        window.scrollTo(0,0);
+    }
+
+    function addPhrase(t) { document.getElementById('writingAnswer').value += t + " "; }
+    function showDef(t) { 
+    // Log kaydı ekle
+    let simdi = new Date().toLocaleTimeString();
+    examLogs.push("[" + simdi + "] Sözlük: " + t);
+
+    // Ekranda anlamı gösteren mevcut kod
+    var x = document.getElementById("vocab-toast"); 
+    x.innerText = t; 
+    x.className = "show"; 
+    setTimeout(()=>{x.className=""},3000); 
+}
+
+    function copyResult() {
+        let c = document.getElementById("finalReport"); c.select(); c.setSelectionRange(0,99999);
+        navigator.clipboard.writeText(c.value).then(()=>{ alert("Kopyalandı! Email veya WhatsApp'a yapıştırın."); });
+    }
+    document.addEventListener('contextmenu', event => event.preventDefault());
+    function restoreSession() { startExam(true); }
+</script>
+
+</body>
+</html>
