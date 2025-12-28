@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>İtalyan Kültür Merkezi - Sınav Platformu</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f4f6f9;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .container {
+            background: white;
+            padding: 40px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+            max-width: 500px;
+            width: 90%;
+            text-align: center;
+        }
+        .logo {
+            font-size: 3em;
+            margin-bottom: 10px;
+        }
+        h1 {
+            color: #2c3e50;
+            font-size: 1.5em;
+            margin-bottom: 10px;
+        }
+        p {
+            color: #7f8c8d;
+            margin-bottom: 30px;
+        }
+        .exam-list {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        .exam-btn {
+            display: block;
+            text-decoration: none;
+            background-color: #fff;
+            color: #333;
+            padding: 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            transition: all 0.3s ease;
+            font-weight: bold;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .exam-btn:hover {
+            border-color: #007bff;
+            color: #007bff;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+        }
+        .exam-btn.disabled {
+            background-color: #f9f9f9;
+            color: #ccc;
+            border-color: #eee;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+        .badge {
+            font-size: 0.8em;
+            padding: 5px 10px;
+            border-radius: 15px;
+            color: white;
+        }
+        .active { background-color: #28a745; } /* Yeşil */
+        .closed { background-color: #6c757d; } /* Gri */
+        
+        footer {
+            margin-top: 30px;
+            font-size: 0.8em;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="logo">🇮🇹</div>
+    <h1>İtalyanca Dil Kursu<br>Sınav Merkezi</h1>
+    <p>Lütfen girmek istediğiniz sınavı seçiniz:</p>
+
+    <div class="exam-list">
+        
+        <a href="sinav2.html" class="exam-btn">
+            <span>Esame II Livello (2024-2025)</span>
+            <span class="badge active">Aktif</span>
+        </a>
+
+        <a href="#" class="exam-btn disabled">
+            <span>Telafi Sınavı (Yakında)</span>
+            <span class="badge closed">Kapalı</span>
+        </a>
+
+        </div>
+
+    <footer>
+        &copy; 2025 Didem Özkan - İtalyanca Dil Eğitimi
+    </footer>
+</div>
+
+</body>
+</html>
